@@ -16,7 +16,7 @@ import modules
 from LKF import LKF
 
 DEFAULT_SEQUENCE = '00'
-TIMES_PATH = '/home/joost/Documents/Master_Thesis/Data/KITTI/dataset/odometry_poses/poses/'
+TIMES_PATH = '/home/joost/Documents/Master_Thesis/visual_inertial/gt/'
 
 class pipeline():
   """
@@ -30,7 +30,7 @@ class pipeline():
     self.INERTIAL_MODULE = modules.noisy_gt(noise)
     self.VISUAL_MODULE = modules.ORB_SLAM2()
     #self.ERROR_MODULE = modules.error_module(dt_th, dq_th)
-    self.KALMAN_FILTER = LKF()
+    self.KALMAN_FILTER = LKF(noise)
 
 
   def update(self, seq, timestamp):
@@ -60,4 +60,6 @@ if __name__=="__main__":
   # get pose for every timestamp
   for t in times:
     pose = p.update(args.seq, t)
+    print pose
+    print '----------------------------------------------------------'
 

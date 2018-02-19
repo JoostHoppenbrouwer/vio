@@ -12,8 +12,8 @@ Joost Hoppenbrouwer
 import os.path
 import numpy as np
 
-DEFAULT_GT_PATH = '/home/joost/Documents/Master_Thesis/Data/KITTI/dataset/odometry_poses/poses/'
-DEFAULT_ORB_SLAM2_PATH = '/home/joost/Documents/Master_Thesis/ORB_SLAM2/KITTI_results/best/'
+DEFAULT_GT_PATH = '/home/joost/Documents/Master_Thesis/visual_inertial/gt/'
+DEFAULT_ORB_SLAM2_PATH = '/home/joost/Documents/Master_Thesis/visual_inertial/ORB_SLAM2/'
 
 class noisy_gt():
   """

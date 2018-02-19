@@ -12,12 +12,13 @@ class LKF():
   Implementation of a Linear Kalman Filter used for visual-inertial pose estimation.
   """
 
-  def __init__(self):
+  def __init__(self, noise=0.0):
     self.state = np.zeros(7)
     self.p = np.zeros(7) # predicted state
-    #self.S =  #TODO state covariance matrix
+    self.S = np.zeros([7,7]) # state covariance matrix
     self.F = np.eye(7) # state transition matrix
-    #self.Q =  #TODO process noise covariance matrix
+    # process noise covariance matrix --> should match the Gaussian noise in ground truth
+    self.Q = np.eye(7) * noise
     self.H = np.eye(7) # observation matrix
 
 
@@ -26,6 +27,7 @@ class LKF():
     Prediction step of the filter.
     """
     self.p = np.dot(self.F, inertial_pose)
+    print self.p
     self.S = np.dot(self.F, np.dot(self.S, self.F.T)) + self.Q
 
 
@@ -35,7 +37,16 @@ class LKF():
     """
     y = visual_pose - (np.dot(self.H, self.p)) # innovation
     E = np.dot(self.H, np.dot(self.S, self.H.T)) # innovation covariance
-    G = np.dot(self.S, np.dot(self.H.T, np.linalg.inv(E))) # Kalman gain
+    # try to inverse E, catch the case where E is np.zeros([7,7])
+    try:
+      E_inv = np.linalg.inv(E)
+    except np.linalg.linalg.LinAlgError as err:
+      if 'Singular matrix' in err.message:
+        print "!!! Innovation Covariance is singular !!!"
+        E_inv = np.zeros([7,7])
+      else:
+        raise
+    G = np.dot(self.S, np.dot(self.H.T, E_inv)) # Kalman gain
     self.state = self.p + np.dot(G, y)
     self.S = np.dot((np.eye(7) - np.dot(G, self.H)), self.S)
 
