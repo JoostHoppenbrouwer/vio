@@ -20,8 +20,9 @@ class noisy_gt():
   Class used as inertial module. Provides ground thruth data with chosen amount of error.
   """
 
-  def __init__(self, noise, gt_path=DEFAULT_GT_PATH):
-    self.noise = noise
+  def __init__(self, mov_noise_std, rot_noise_std, gt_path=DEFAULT_GT_PATH):
+    self.mov_noise_std = mov_noise_std
+    self.rot_noise_std = rot_noise_std
     self.data = self.load_KITTI_gt(gt_path)
 
 
@@ -49,7 +50,16 @@ class noisy_gt():
     """
     Return pose at timestamp for given sequence.
     """
-    return self.data[seq][timestamp]
+    gt = self.data[seq][timestamp]
+    noisy_gt = np.copy(gt)
+    # add Gaussian noise to translation
+    mov_noise = np.random.normal(0, self.mov_noise_std, 3)
+    noisy_gt[0:3] = noisy_gt[0:3] + mov_noise
+    # add noise to rotation (add to qx,qy,qz then normalize)
+    rot_noise = np.append(np.random.normal(0, self.rot_noise_std, 3),0)
+    noisy_gt[3:] = (noisy_gt[3:] + rot_noise)
+    noisy_gt[3:] = noisy_gt[3:] / np.linalg.norm(noisy_gt[3:])
+    return gt, noisy_gt
 
 
 class ORB_SLAM2():

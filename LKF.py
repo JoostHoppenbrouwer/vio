@@ -5,6 +5,7 @@ Learning to fuse: A deep learning approach to visual-inertial camera pose estima
 Joost Hoppenbrouwer
 """
 
+import sys
 import numpy as np
 
 class LKF():
@@ -12,13 +13,15 @@ class LKF():
   Implementation of a Linear Kalman Filter used for visual-inertial pose estimation.
   """
 
-  def __init__(self, noise=0.0):
+  def __init__(self, mov_noise_std=0.0, rot_noise_std=0.0):
     self.state = np.zeros(7)
     self.p = np.zeros(7) # predicted state
     self.S = np.zeros([7,7]) # state covariance matrix
     self.F = np.eye(7) # state transition matrix
     # process noise covariance matrix --> should match the Gaussian noise in ground truth
-    self.Q = np.eye(7) * noise
+    Q_mov = np.asarray([mov_noise_std]*3)
+    Q_rot = np.asarray([rot_noise_std]*4)
+    self.Q = np.diag(np.append(Q_mov, Q_rot))
     self.H = np.eye(7) # observation matrix
 
 
@@ -36,7 +39,7 @@ class LKF():
     Update step of the filter.
     """
     y = visual_pose - (np.dot(self.H, self.p)) # innovation
-    E = np.dot(self.H, np.dot(self.S, self.H.T)) # innovation covariance
+    E = np.dot(self.H, np.dot(self.S, self.H.T)) #+R # innovation covariance
     # try to inverse E, catch the case where E is np.zeros([7,7])
     try:
       E_inv = np.linalg.inv(E)
@@ -51,13 +54,13 @@ class LKF():
     self.S = np.dot((np.eye(7) - np.dot(G, self.H)), self.S)
 
 
-  def step(self, poses):
+  def step(self, inertial_pose, visual_pose):
     """
     Full step of the filter including prediction and update.
     """
-    self.predict(poses[0])
-    if poses[1] is None:
+    self.predict(inertial_pose)
+    if visual_pose is None:
       self.state = self.p
     else:
-      self.update(poses[1])
+      self.update(visual_pose)
     return self.state
