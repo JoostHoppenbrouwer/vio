@@ -34,15 +34,13 @@ class noisy_gt():
     # ORB-SLAM2 fails on sequence 01, sequence 03 has no inertial data
     for seq in ['00', '02', '04', '05', '06', '07', '08', '09', '10']:
       data[seq] = {}
-      # load times
-      with open(os.path.join(gt_path, seq + '_times.txt')) as f:
-        times = map(float, f.read().splitlines())
-      # load gt
+      # load data
       with open(os.path.join(gt_path, seq + '.txt')) as f:
-        gt = [map(float, line.split()) for line in f.read().splitlines()]
-      # convert gt to [x,y,z,qx,qy,qz,qw] and store
-      for i, t in enumerate(times):
-        data[seq][t] = np.asarray(_34_posquat(gt[i]))
+        traj = [map(float, line.split()) for line in f.read().splitlines()]
+      # store
+      for pose in traj:
+        pose_arr = np.asarray(pose)
+        data[seq][pose[0]] = pose_arr[1:]
     return data
 
 
@@ -133,38 +131,3 @@ class error_module():
       return out
     out.append(visual_pose)
     return out
-
-
-"""
-Helper functions
-"""
-
-def _34_posquat(mat):
-  # http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-  tr = mat[0] + mat[5] + mat[10]
-  if (tr > 0):
-    S = np.sqrt(tr + 1.0) * 2
-    qw = 0.25 * S
-    qx = (mat[9] - mat[6]) / S
-    qy = (mat[2] - mat[8]) / S
-    qz = (mat[4] - mat[1]) / S
-  elif ((mat[0] > mat[5]) and (mat[0] > mat[10])):
-    S = np.sqrt(1.0 + mat[0] - mat[5] - mat[10]) * 2
-    qw = (mat[9] - mat[6]) / S
-    qx = 0.25 * S
-    qy = (mat[1] + mat[4]) / S
-    qz = (mat[2] + mat[8]) / S
-  elif (mat[5] > mat[10]):
-    S = np.sqrt(1.0 + mat[5] - mat[0] - mat[10]) * 2
-    qw = (mat[2] - mat[8]) / S
-    qx = (mat[1] + mat[4]) / S
-    qy = 0.25 * S
-    qz = (mat[6] + mat[9]) / S
-  else:
-    S = np.sqrt(1.0 + mat[10] - mat[0] - mat[5]) * 2
-    qw = (mat[4] - mat[1]) / S
-    qx = (mat[2] + mat[8]) / S
-    qy = (mat[6] + mat[9]) / S
-    qz = 0.25 * S
-  return [mat[3], mat[7], mat[11], qx, qy, qz, qw]
-
