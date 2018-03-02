@@ -16,7 +16,7 @@ import modules
 from LKF import LKF
 
 DEFAULT_SEQUENCE = '00'
-TIMES_PATH = '/home/joost/Documents/Master_Thesis/visual_inertial/gt/'
+TIMES_PATH = '/home/joost/Documents/Master_Thesis/vio/gt/'
 
 class pipeline():
   """

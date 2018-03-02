@@ -18,9 +18,9 @@ class LKF():
     self.p = np.zeros(7) # predicted state
     self.S = np.zeros([7,7]) # state covariance matrix
     self.F = np.eye(7) # state transition matrix
-    # process noise covariance matrix --> should match the Gaussian noise in ground truth
-    Q_mov = np.asarray([mov_noise_std]*3)
-    Q_rot = np.asarray([rot_noise_std]*4)
+    # process noise covariance matrix --> should match the variance of the Gaussian noise in ground truth
+    Q_mov = np.asarray([mov_noise_std**2]*3)
+    Q_rot = np.asarray([rot_noise_std**2]*4)
     self.Q = np.diag(np.append(Q_mov, Q_rot))
     self.H = np.eye(7) # observation matrix
 

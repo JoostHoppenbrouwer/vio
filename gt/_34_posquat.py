@@ -8,7 +8,7 @@ import numpy as np
 import argparse
 import os
 
-BASE_PATH = '/home/joost/Documents/Master_Thesis/visual_inertial/gt/'
+BASE_PATH = '/home/joost/Documents/Master_Thesis/vio/gt/'
 
 def _34_posquat(mat):
   # http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
