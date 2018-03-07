@@ -43,8 +43,8 @@ def _34_posquat(mat):
 def convert(data, times):
   results = []
   for time, point in zip(times, data):
-      posquat = _34_posquat(point.flatten())
-      results.append(np.append(time, posquat))
+    posquat = _34_posquat(point.flatten())
+    results.append(np.append(time, posquat))
   return results
 
 
