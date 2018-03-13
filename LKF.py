@@ -17,7 +17,7 @@ class LKF():
   """
 
   def __init__(self, mov_noise_std=0.0, rot_noise_std=0.0):
-    self.state = np.zeros(7)  # initial state
+    self.state = np.append(np.zeros(6), 1)  # initial state
     self.p = np.zeros(7)      # predicted state
     self.S = np.zeros([7,7])  # state covariance matrix
     self.F = np.eye(7)        # state transition matrix
@@ -29,12 +29,15 @@ class LKF():
     self.H = np.eye(7)        # observation matrix
 
 
+  def get_state(self):
+    return self.state
+
+
   def predict(self, inertial_pose):
     """
     Prediction step of the filter.
     """
     self.p = np.dot(self.F, inertial_pose)
-    print self.p
     self.S = np.dot(self.F, np.dot(self.S, self.F.T)) + self.Q
 
 

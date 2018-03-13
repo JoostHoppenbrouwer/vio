@@ -29,24 +29,24 @@ def diff(seq):
     if prev_pose is not None:
       gt_pose = gt[round(pose[0],6)]
       mov_error = pose[1:4] - gt_pose[0:3]
-      print gt_pose[3:]
-      print pose[4:]
       rot_error = quat_diff(gt_pose[3:], pose[4:])
-      print rot_error
-      print '-----------------------------------'
       errors.append(np.append(mov_error, rot_error))
     prev_pose = pose
   return errors
 
 
+def quat_multiply(q1, q2):
+  x = (q1[3]*q2[0]) + (q1[0]*q2[3]) + (q1[1]*q2[2]) - (q1[2]*q1[1])
+  y = (q1[3]*q2[1]) + (q1[0]*q2[2]) + (q1[1]*q2[3]) - (q1[2]*q2[0])
+  z = (q1[3]*q2[2]) + (q1[0]*q2[1]) + (q1[1]*q2[0]) - (q1[2]*q2[3])
+  w = (q1[3]*q2[3]) + (q1[0]*q2[0]) + (q1[1]*q2[1]) - (q1[2]*q2[2])
+  return [x, y, z, w]
+
+
 def quat_diff(q1, q2):
   # https://www.cprogramming.com/tutorial/3d/quaternions.html
   q1_inv = [-q1[0], -q1[1], -q1[2], q1[3]]
-  x = (q2[3]*q1_inv[0]) + (q2[0]*q1_inv[3]) + (q2[1]*q1_inv[2]) - (q2[2]*q1_inv[1])
-  y = (q2[3]*q1_inv[1]) + (q2[0]*q1_inv[2]) + (q2[1]*q1_inv[3]) - (q2[2]*q1_inv[0])
-  z = (q2[3]*q1_inv[2]) + (q2[0]*q1_inv[1]) + (q2[1]*q1_inv[0]) - (q2[2]*q1_inv[3])
-  w = (q2[3]*q1_inv[3]) + (q2[0]*q1_inv[0]) + (q2[1]*q1_inv[1]) - (q2[2]*q1_inv[2])
-  rot = [x, y, z, w]
+  rot = quat_multiply(q2, q1_inv)
   return rot / np.linalg.norm(rot)
 
 

@@ -40,24 +40,30 @@ class noisy_gt():
       # store
       for pose in traj:
         pose_arr = np.asarray(pose)
-        data[seq][pose[0]] = pose_arr[1:]
+        data[seq][round(pose[0],6)] = pose_arr[1:]
     return data
 
 
-  def get_pose(self, seq, timestamp):
+  def get_pose(self, seq, timestamp, current_pose):
     """
     Return pose at timestamp for given sequence.
     """
-    gt = self.data[seq][timestamp]
-    noisy_gt = np.copy(gt)
+    pose = np.copy(current_pose)
+    try:
+      gt = self.data[seq][round(timestamp,6)]
+    except KeyError:
+      return pose
     # add Gaussian noise to translation
-    mov_noise = np.random.normal(0, self.mov_noise_std, 3)
-    noisy_gt[0:3] = noisy_gt[0:3] + mov_noise
-    # add noise to rotation (add to qx,qy,qz then normalize)
-    rot_noise = np.append(np.random.normal(0, self.rot_noise_std, 3),0)
-    noisy_gt[3:] = (noisy_gt[3:] + rot_noise)
-    noisy_gt[3:] = noisy_gt[3:] / np.linalg.norm(noisy_gt[3:])
-    return gt, noisy_gt
+    pose[0:3] = pose[0:3] + gt[0:3]
+    if self.mov_noise_std != 0:
+      mov_noise = np.random.normal(0, self.mov_noise_std, 3)
+      pose[0:3] = pose[0:3] + mov_noise
+    # add noise to rotation
+    if self.rot_noise_std != 0:
+      rot_noise = np.append(np.random.normal(0, self.rot_noise_std, 3), 0)
+      gt[3:] = gt[3:] + rot_noise
+    pose[3:] = quat_multiply(gt[3:], pose[3:])
+    return pose
 
 
 class ORB_SLAM2():
@@ -66,8 +72,6 @@ class ORB_SLAM2():
   """
 
   def __init__(self, data_path=DEFAULT_ORB_SLAM2_PATH):
-    self.SCALES = {'00': 16.21, '02': 15.72, '04': 27.04, '05': 24.12,
-      '06': 24.84, '07': 10.98, '08': 10.55, '09': 20.32, '10': 16.67}
     self.data = self.load_ORB_SLAM2_data(data_path)
 
 
@@ -85,19 +89,21 @@ class ORB_SLAM2():
       # store
       for pose in traj:
         pose_arr = np.asarray(pose)
-        pose_arr[1:4] = pose_arr[1:4] * self.SCALES[seq]
-        data[seq][pose[0]] = pose_arr[1:]
+        data[seq][round(pose[0],6)] = pose_arr[1:]
     return data
 
 
-  def get_pose(self, seq, timestamp):
+  def get_pose(self, seq, timestamp, current_pose):
     """
     Return pose at timestamp for given sequence.
     """
+    pose = np.copy(current_pose)
     try:
-      pose = self.data[seq][timestamp]
+      orb = self.data[seq][round(timestamp,6)]
     except KeyError:
-      pose = None
+      return pose
+    pose[0:3] = pose[0:3] + orb[0:3]
+    pose[3:] = quat_multiply(orb[3:], pose[3:])
     return pose
 
 
@@ -131,3 +137,15 @@ class error_module():
       return out
     out.append(visual_pose)
     return out
+
+
+"""
+Helper functions
+"""
+
+def quat_multiply(q1, q2):
+  x = (q1[3]*q2[0]) + (q1[0]*q2[3]) + (q1[1]*q2[2]) - (q1[2]*q1[1])
+  y = (q1[3]*q2[1]) + (q1[0]*q2[2]) + (q1[1]*q2[3]) - (q1[2]*q2[0])
+  z = (q1[3]*q2[2]) + (q1[0]*q2[1]) + (q1[1]*q2[0]) - (q1[2]*q2[3])
+  w = (q1[3]*q2[3]) + (q1[0]*q2[0]) + (q1[1]*q2[1]) - (q1[2]*q2[2])
+  return [x, y, z, w] / np.linalg.norm([x, y, z, w])

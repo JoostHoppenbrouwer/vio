@@ -38,10 +38,11 @@ class pipeline():
     Retrieve next pose from input data.
     NOTE: loads pre-generated data.
     """
-    gt, inertial_pose = self.INERTIAL_MODULE.get_pose(seq, timestamp)
-    visual_pose = self.VISUAL_MODULE.get_pose(seq, timestamp)
+    current_pose = self.KALMAN_FILTER.get_state()
+    inertial_pose = self.INERTIAL_MODULE.get_pose(seq, timestamp, current_pose)
+    visual_pose = self.VISUAL_MODULE.get_pose(seq, timestamp, current_pose)
     #filtered = self.ERROR_MODULE.filter(inertial_pose, visual_pose)
-    return gt, self.KALMAN_FILTER.step(inertial_pose, visual_pose)
+    return inertial_pose, visual_pose, self.KALMAN_FILTER.step(inertial_pose, visual_pose)
 
 
 if __name__=="__main__":
@@ -59,8 +60,6 @@ if __name__=="__main__":
 
   # get pose for every timestamp
   for t in times:
-    gt, pose = p.update(args.seq, t)
-    print gt
+    _, _, pose = p.update(args.seq, t)
     print pose
-    print '----------------------------------------------------------'
 
