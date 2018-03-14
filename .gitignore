@@ -1,3 +1,5 @@
 KITTI_results/
 experiment.py
-experiments.sh
+mov_experiments.sh
+rot_experiments.sh
+baseline.sh
